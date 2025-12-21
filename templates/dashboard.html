@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+    <h2>Welcome, {{ user.email }}</h2>
+
+    <form method="post" action="/create">
+        <input type="url" name="original_url" placeholder="Paste URL here" required>
+        <button>Shorten</button>
+    </form>
+
+    <table>
+        <tr>
+            <th>Short</th>
+            <th>Clicks</th>
+        </tr>
+        {% for url in urls %}
+        <tr>
+            <td>
+                <a href="/{{ url.short_code }}" target="_blank">
+                    /{{ url.short_code }}
+                </a>
+            </td>
+            <td>{{ url.click_count }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <a href="/logout">Logout</a>
+</div>
+{% endblock %}

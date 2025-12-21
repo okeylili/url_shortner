@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Analytics - LinkShort</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="dashboard-page">
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                </div>
+                <span>LinkShort</span>
+            </a>
+            <div class="navbar-menu">
+                <a href="/" class="navbar-link">Home</a>
+                <a href="/my-urls" class="navbar-link">My URLs</a>
+                <a href="/analytics" class="navbar-link active">Analytics</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Search Section -->
+        <div class="card" style="margin-bottom: 24px;">
+            <h2 style="margin: 0 0 16px;">View URL Analytics</h2>
+            <form class="dashboard-form" id="searchForm">
+                <input 
+                    type="text" 
+                    id="shortCodeInput" 
+                    placeholder="Enter short code (e.g., abc123)" 
+                    required
+                >
+                <button type="submit">View Analytics</button>
+            </form>
+        </div>
+
+        <!-- Analytics Section -->
+        <div id="analyticsSection" class="hidden">
+            <!-- URL Info Card -->
+            <div class="card" style="margin-bottom: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+                    <div>
+                        <h1 id="urlTitle" style="margin: 0 0 8px; font-size: 24px;">URL Analytics</h1>
+                        <div id="urlInfo" class="text-muted" style="font-size: 14px;"></div>
+                    </div>
+                    <span id="statusBadge" class="badge success">Active</span>
+                </div>
+                
+                <div style="padding: 16px; background: rgba(102, 126, 234, 0.05); border: 1px solid #1f2933; border-radius: 10px;">
+                    <div style="margin-bottom: 8px;">
+                        <strong style="color: #9ca3af; font-size: 13px;">Short URL:</strong>
+                        <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+                            <a id="shortUrlLink" href="#" target="_blank" style="color: #8b9dff; font-weight: 600; font-size: 16px;"></a>
+                            <button onclick="copyShortUrl()" class="btn-icon btn-copy" style="padding: 4px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <strong style="color: #9ca3af; font-size: 13px;">Original URL:</strong>
+                        <div id="originalUrl" style="color: #e5e7eb; margin-top: 4px; word-break: break-all;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid" style="margin-bottom: 24px;">
+                <div class="stat-card">
+                    <div class="stat-label">Total Clicks</div>
+                    <div class="stat-value" id="totalClicks">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Created</div>
+                    <div class="stat-value" id="createdDate" style="font-size: 18px;"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg. Daily Clicks</div>
+                    <div class="stat-value" id="avgClicks">0</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="card" style="margin-bottom: 24px;">
+                <h2 style="margin: 0 0 20px;">Clicks Over Time</h2>
+                <canvas id="clicksChart" style="max-height: 300px;"></canvas>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                <div class="card">
+                    <h2 style="margin: 0 0 20px;">Browser Distribution</h2>
+                    <canvas id="browserChart"></canvas>
+                </div>
+                <div class="card">
+                    <h2 style="margin: 0 0 20px;">Device Types</h2>
+                    <canvas id="deviceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Clicks Table -->
+            <div class="card">
+                <h2 style="margin: 0 0 20px;">Recent Clicks</h2>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #1f2933;">
+                                <th style="padding: 12px; text-align: left; color: #9ca3af; font-weight: 600;">Time</th>
+                                <th style="padding: 12px; text-align: left; color: #9ca3af; font-weight: 600;">Browser</th>
+                                <th style="padding: 12px; text-align: left; color: #9ca3af; font-weight: 600;">Device</th>
+                                <th style="padding: 12px; text-align: left; color: #9ca3af; font-weight: 600;">OS</th>
+                                <th style="padding: 12px; text-align: left; color: #9ca3af; font-weight: 600;">Referer</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clicksTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="20" x2="12" y2="10"></line>
+                <line x1="18" y1="20" x2="18" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="16"></line>
+            </svg>
+            <h3>No Analytics to Display</h3>
+            <p>Enter a short code above to view detailed analytics</p>
+        </div>
+    </div>
+
+    <script>
+        let clicksChart, browserChart, deviceChart;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if short code in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            if (code) {
+                document.getElementById('shortCodeInput').value = code;
+                loadAnalytics(code);
+            }
+
+            document.getElementById('searchForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const code = document.getElementById('shortCodeInput').value.trim();
+                loadAnalytics(code);
+            });
+        });
+
+        async function loadAnalytics(shortCode) {
+            try {
+                const response = await fetch(`/api/analytics/${shortCode}`);
+                
+                if (!response.ok) {
+                    throw new Error('URL not found');
+                }
+                
+                const data = await response.json();
+                
+                // Hide empty state, show analytics
+                document.getElementById('emptyState').classList.add('hidden');
+                document.getElementById('analyticsSection').classList.remove('hidden');
+                
+                // Update URL info
+                document.getElementById('shortUrlLink').href = data.short_url;
+                document.getElementById('shortUrlLink').textContent = data.short_url;
+                document.getElementById('originalUrl').textContent = data.original_url;
+                
+                const statusBadge = document.getElementById('statusBadge');
+                if (data.is_active) {
+                    statusBadge.textContent = 'Active';
+                    statusBadge.className = 'badge success';
+                } else {
+                    statusBadge.textContent = 'Inactive';
+                    statusBadge.className = 'badge error';
+                }
+                
+                // Update stats
+                document.getElementById('totalClicks').textContent = data.click_count;
+                document.getElementById('createdDate').textContent = new Date(data.created_at).toLocaleDateString();
+                
+                // Calculate average daily clicks
+                const daysSinceCreation = Math.max(1, Math.floor((Date.now() - new Date(data.created_at)) / (1000 * 60 * 60 * 24)));
+                const avgClicks = Math.round(data.click_count / daysSinceCreation);
+                document.getElementById('avgClicks').textContent = avgClicks;
+                
+                // Render charts
+                renderClicksChart(data.click_by_date);
+                renderBrowserChart(data.click_by_browser);
+                renderDeviceChart(data.click_by_device);
+                
+                // Render clicks table
+                renderClicksTable(data.clicks);
+                
+            } catch (error) {
+                alert(error.message);
+                document.getElementById('analyticsSection').classList.add('hidden');
+                document.getElementById('emptyState').classList.remove('hidden');
+            }
+        }
+
+        function renderClicksChart(clicksByDate) {
+            const ctx = document.getElementById('clicksChart');
+            
+            if (clicksChart) {
+                clicksChart.destroy();
+            }
+            
+            const dates = Object.keys(clicksByDate).sort();
+            const values = dates.map(date => clicksByDate[date]);
+            
+            clicksChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Clicks',
+                        data: values,
+                        borderColor: '#8b9dff',
+                        backgroundColor: 'rgba(139, 157, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#9ca3af' },
+                            grid: { color: '#1f2933' }
+                        },
+                        x: {
+                            ticks: { color: '#9ca3af' },
+                            grid: { color: '#1f2933' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderBrowserChart(clicksByBrowser) {
+            const ctx = document.getElementById('browserChart');
+            
+            if (browserChart) {
+                browserChart.destroy();
+            }
+            
+            const browsers = Object.keys(clicksByBrowser);
+            const values = Object.values(clicksByBrowser);
+            
+            browserChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: browsers,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: [
+                            '#8b9dff',
+                            '#667eea',
+                            '#764ba2',
+                            '#22c55e',
+                            '#f97316'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#9ca3af' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDeviceChart(clicksByDevice) {
+            const ctx = document.getElementById('deviceChart');
+            
+            if (deviceChart) {
+                deviceChart.destroy();
+            }
+            
+            const devices = Object.keys(clicksByDevice);
+            const values = Object.values(clicksByDevice);
+            
+            deviceChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: devices,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: ['#8b9dff', '#667eea', '#764ba2']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#9ca3af' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderClicksTable(clicks) {
+            const table = document.getElementById('clicksTable');
+            
+            if (clicks.length === 0) {
+                table.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #9ca3af;">No clicks yet</td></tr>';
+                return;
+            }
+            
+            table.innerHTML = clicks.slice(0, 20).map(click => `
+                <tr style="border-bottom: 1px solid #1f2933;">
+                    <td style="padding: 12px; color: #e5e7eb;">${new Date(click.clicked_at).toLocaleString()}</td>
+                    <td style="padding: 12px; color: #e5e7eb;">${click.browser || 'Unknown'}</td>
+                    <td style="padding: 12px; color: #e5e7eb;">${click.device_type || 'unknown'}</td>
+                    <td style="padding: 12px; color: #e5e7eb;">${click.operating_system || 'Unknown'}</td>
+                    <td style="padding: 12px; color: #e5e7eb; word-break: break-all;">${click.referer || 'Direct'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function copyShortUrl() {
+            const url = document.getElementById('shortUrlLink').textContent;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('URL copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>
