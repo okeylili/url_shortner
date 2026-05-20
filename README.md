@@ -2,7 +2,7 @@
 
 A web-based URL shortener built using **FastAPI**, **SQLite**, and **SQLAlchemy**.  
 
-**Features:**
+**Features:** 
 - User authentication (login/register)
 - Dashboard showing user’s shortened URLs
 - Click tracking for each URL
